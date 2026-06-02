@@ -1,0 +1,75 @@
+
+    <!-- STATS TAB -->
+    <div id="tab-stats" class="tab-content">
+
+      <!-- Month Selector -->
+      <div class="section-title">
+        <span id="stats-month-label">Bulan Ini</span>
+        <div class="stats-month-nav">
+          <button class="icon-btn" onclick="statsChangeMonth(-1)"><i class="ti ti-chevron-left"></i></button>
+          <button class="icon-btn" onclick="statsChangeMonth(1)"><i class="ti ti-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="stats-summary-grid">
+        <div class="stats-card stats-card-blue">
+          <div class="stats-card-icon"><i class="ti ti-checkbox"></i></div>
+          <div class="stats-card-val" id="stats-habit-avg">—</div>
+          <div class="stats-card-label">Rata-rata Habit</div>
+        </div>
+        <div class="stats-card stats-card-purple">
+          <div class="stats-card-icon"><i class="ti ti-mood-happy"></i></div>
+          <div class="stats-card-val" id="stats-mood-avg">—</div>
+          <div class="stats-card-label">Rata-rata Mood</div>
+        </div>
+        <div class="stats-card stats-card-teal">
+          <div class="stats-card-icon"><i class="ti ti-moon"></i></div>
+          <div class="stats-card-val" id="stats-sleep-avg">—</div>
+          <div class="stats-card-label">Rata-rata Tidur</div>
+        </div>
+        <div class="stats-card stats-card-green">
+          <div class="stats-card-icon"><i class="ti ti-trending-up"></i></div>
+          <div class="stats-card-val" id="stats-finance-net">—</div>
+          <div class="stats-card-label">Net Keuangan</div>
+        </div>
+      </div>
+
+      <!-- vs Last Month Badge -->
+      <div class="card stats-compare-card" id="stats-compare-card">
+        <div class="stats-compare-title"><i class="ti ti-git-compare"></i> Dibanding Bulan Lalu</div>
+        <div class="stats-compare-grid" id="stats-compare-grid"></div>
+      </div>
+
+      <!-- Habit Chart -->
+      <div class="section-title"><span>Habit Completion % Harian</span></div>
+      <div class="card chart-card">
+        <canvas id="statsHabitChart"></canvas>
+      </div>
+
+      <!-- Mood Chart -->
+      <div class="section-title"><span>Mood Trend Bulanan</span></div>
+      <div class="card chart-card">
+        <canvas id="statsMoodChart"></canvas>
+      </div>
+
+      <!-- Sleep Chart -->
+      <div class="section-title"><span>Jam Tidur Bulanan</span></div>
+      <div class="card chart-card">
+        <canvas id="statsSleepChart"></canvas>
+      </div>
+
+      <!-- Finance Chart -->
+      <div class="section-title"><span>Keuangan Bulanan</span></div>
+      <div class="card chart-card">
+        <canvas id="statsFinanceChart"></canvas>
+      </div>
+
+      <!-- Best / Worst Day -->
+      <div class="section-title"><span>Highlight Bulan Ini</span></div>
+      <div class="card">
+        <div class="stats-highlight-grid" id="stats-highlights"></div>
+      </div>
+
+    </div>
+

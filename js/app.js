@@ -56,6 +56,7 @@ function showTab(t){
   if(t==='mood'){setTimeout(()=>{renderMoodChart();renderSleepChart();},50)}
   if(t==='health'){setTimeout(()=>renderWeightChart(),50)}
   if(t==='finance'){renderFinance();setTimeout(()=>renderPieChart(),50)}
+  if(t==='stats'){setTimeout(()=>renderStats(),50)}
 }
 
 /* ===== TOAST ===== */
@@ -460,3 +461,222 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   setTxType('income');
 });
+
+/* ===== STATS MODULE ===== */
+let statsYear=new Date().getFullYear();
+let statsMonth=new Date().getMonth(); // 0-based
+let statsHabitChart,statsMoodChart,statsSleepChart,statsFinanceChart;
+
+const MONTH_NAMES=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const MOOD_EMOJI=['😔','😐','🙂','😊','🤩'];
+
+function statsChangeMonth(dir){
+  statsMonth+=dir;
+  if(statsMonth>11){statsMonth=0;statsYear++;}
+  if(statsMonth<0){statsMonth=11;statsYear--;}
+  renderStats();
+}
+
+function getDaysInMonth(y,m){return new Date(y,m+1,0).getDate();}
+
+function getMonthData(y,m){
+  const days=getDaysInMonth(y,m);
+  const habitData=[],moodData=[],sleepData=[];
+  let incomeTotal=0,expenseTotal=0;
+  const dates=[];
+
+  for(let d=1;d<=days;d++){
+    const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    dates.push(dateStr.slice(5));
+
+    // Habit %
+    const log=D.habitLog&&D.habitLog[dateStr];
+    if(log&&D.habits&&D.habits.length>0){
+      const done=Object.values(log).filter(Boolean).length;
+      habitData.push(Math.round((done/D.habits.length)*100));
+    } else {
+      habitData.push(null);
+    }
+
+    // Mood
+    const mood=D.moods&&D.moods[dateStr];
+    moodData.push(mood!==undefined?mood:null);
+
+    // Sleep
+    const sleep=D.sleep&&D.sleep[dateStr];
+    sleepData.push(sleep?sleep.hours:null);
+  }
+
+  // Finance for the month
+  const prefix=`${y}-${String(m+1).padStart(2,'0')}`;
+  (D.transactions||[]).forEach(t=>{
+    if(t.date.startsWith(prefix)){
+      if(t.type==='income') incomeTotal+=t.amount;
+      else expenseTotal+=t.amount;
+    }
+  });
+
+  return {dates,habitData,moodData,sleepData,incomeTotal,expenseTotal,days};
+}
+
+function calcAvg(arr){
+  const valid=arr.filter(v=>v!==null&&v!==undefined);
+  return valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:null;
+}
+
+function fmtCompare(curr,prev,unit,higherIsBetter=true){
+  if(curr===null||prev===null) return {val:'—',cls:'stats-cmp-same'};
+  const diff=curr-prev;
+  if(Math.abs(diff)<0.01) return {val:'Sama',cls:'stats-cmp-same'};
+  const better=(diff>0)===higherIsBetter;
+  const sign=diff>0?'+':'';
+  return {val:`${sign}${Math.round(diff*10)/10}${unit}`,cls:better?'stats-cmp-up':'stats-cmp-down'};
+}
+
+function renderStats(){
+  const y=statsYear,m=statsMonth;
+  document.getElementById('stats-month-label').textContent=MONTH_NAMES[m]+' '+y;
+
+  const cur=getMonthData(y,m);
+  // Previous month
+  let pm=m-1,py=y;
+  if(pm<0){pm=11;py--;}
+  const prev=getMonthData(py,pm);
+
+  const curHabit=calcAvg(cur.habitData);
+  const curMood=calcAvg(cur.moodData);
+  const curSleep=calcAvg(cur.sleepData);
+  const curNet=cur.incomeTotal-cur.expenseTotal;
+
+  const prevHabit=calcAvg(prev.habitData);
+  const prevMood=calcAvg(prev.moodData);
+  const prevSleep=calcAvg(prev.sleepData);
+  const prevNet=prev.incomeTotal-prev.expenseTotal;
+
+  // Summary cards
+  document.getElementById('stats-habit-avg').textContent=curHabit!==null?Math.round(curHabit)+'%':'—';
+  const moodIdx=curMood!==null?Math.round(curMood):null;
+  document.getElementById('stats-mood-avg').textContent=moodIdx!==null?MOOD_EMOJI[moodIdx]:'—';
+  document.getElementById('stats-sleep-avg').textContent=curSleep!==null?(Math.round(curSleep*10)/10)+' jam':'—';
+  document.getElementById('stats-finance-net').textContent=curNet?fmtRp(curNet):'—';
+
+  // Compare grid
+  const cmpItems=[
+    {icon:'📋',label:'Habit',cur:curHabit,prev:prevHabit,unit:'%',higher:true},
+    {icon:'😊',label:'Mood',cur:curMood,prev:prevMood,unit:'',higher:true},
+    {icon:'🌙',label:'Tidur',cur:curSleep,prev:prevSleep,unit:' jam',higher:true},
+    {icon:'💰',label:'Net',cur:curNet,prev:prevNet,unit:'',higher:true},
+  ];
+  document.getElementById('stats-compare-grid').innerHTML=cmpItems.map(item=>{
+    let cmpVal,cmpCls;
+    if(item.label==='Net'){
+      const r=fmtCompare(item.cur,item.prev,' ');
+      // For net use raw diff formatted as Rp
+      if(item.cur===null||item.prev===null){cmpVal='—';cmpCls='stats-cmp-same';}
+      else{
+        const diff=item.cur-item.prev;
+        cmpCls=diff>=0?'stats-cmp-up':'stats-cmp-down';
+        cmpVal=(diff>=0?'+':'')+fmtRp(diff);
+      }
+    } else {
+      const r=fmtCompare(item.cur,item.prev,item.unit,item.higher);
+      cmpVal=r.val;cmpCls=r.cls;
+    }
+    return`<div class="stats-cmp-item">
+      <span class="stats-cmp-icon">${item.icon}</span>
+      <span class="stats-cmp-label">${item.label}</span>
+      <span class="stats-cmp-val ${cmpCls}">${cmpVal}</span>
+    </div>`;
+  }).join('');
+
+  // Charts
+  renderStatsHabitChart(cur);
+  renderStatsMoodChart(cur);
+  renderStatsSleepChart(cur);
+  renderStatsFinanceChart(y,m);
+
+  // Highlights
+  renderStatsHighlights(cur,y,m);
+}
+
+function renderStatsHabitChart(cur){
+  const ctx=document.getElementById('statsHabitChart');if(!ctx)return;
+  if(statsHabitChart)statsHabitChart.destroy();
+  const colors=cur.habitData.map(v=>v===null?'rgba(30,111,255,.2)':v>=80?'rgba(0,204,136,.7)':v>=50?'rgba(255,170,0,.7)':'rgba(255,51,102,.7)');
+  statsHabitChart=new Chart(ctx,{type:'bar',data:{labels:cur.dates,datasets:[{data:cur.habitData,backgroundColor:colors,borderRadius:3,borderWidth:0}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',color:'#4a5a88',font:{size:10}},grid:{color:'rgba(30,111,255,.06)'}},x:{ticks:{color:'#4a5a88',font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{display:false}}}}});
+}
+
+function renderStatsMoodChart(cur){
+  const ctx=document.getElementById('statsMoodChart');if(!ctx)return;
+  if(statsMoodChart)statsMoodChart.destroy();
+  statsMoodChart=new Chart(ctx,{type:'line',data:{labels:cur.dates,datasets:[{data:cur.moodData,borderColor:'#9966ff',backgroundColor:'rgba(153,102,255,.1)',tension:.4,pointRadius:3,pointBackgroundColor:'#9966ff',pointBorderColor:'#0a0f1e',pointBorderWidth:2,spanGaps:true,fill:true}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:-0.5,max:4.5,ticks:{stepSize:1,callback:v=>MOOD_EMOJI[v]||'',color:'#4a5a88',font:{size:13}},grid:{color:'rgba(153,102,255,.06)'}},x:{ticks:{color:'#4a5a88',font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{display:false}}}}});
+}
+
+function renderStatsSleepChart(cur){
+  const ctx=document.getElementById('statsSleepChart');if(!ctx)return;
+  if(statsSleepChart)statsSleepChart.destroy();
+  const colors=cur.sleepData.map(v=>v===null?'rgba(0,204,204,.2)':v>=7?'rgba(0,204,136,.7)':v>=6?'rgba(255,170,0,.7)':'rgba(255,51,102,.7)');
+  statsSleepChart=new Chart(ctx,{type:'bar',data:{labels:cur.dates,datasets:[{data:cur.sleepData,backgroundColor:colors,borderRadius:3,borderWidth:0}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:12,ticks:{callback:v=>v+'j',color:'#4a5a88',font:{size:10}},grid:{color:'rgba(0,204,204,.06)'}},x:{ticks:{color:'#4a5a88',font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{display:false}}}}});
+}
+
+function renderStatsFinanceChart(y,m){
+  const ctx=document.getElementById('statsFinanceChart');if(!ctx)return;
+  if(statsFinanceChart)statsFinanceChart.destroy();
+  // Weekly buckets
+  const weeks=['Minggu 1','Minggu 2','Minggu 3','Minggu 4','Minggu 5'];
+  const inc=[0,0,0,0,0],exp=[0,0,0,0,0];
+  const prefix=`${y}-${String(m+1).padStart(2,'0')}`;
+  (D.transactions||[]).filter(t=>t.date.startsWith(prefix)).forEach(t=>{
+    const day=parseInt(t.date.slice(8,10));
+    const wk=Math.min(4,Math.floor((day-1)/7));
+    if(t.type==='income')inc[wk]+=t.amount;
+    else exp[wk]+=t.amount;
+  });
+  statsFinanceChart=new Chart(ctx,{type:'bar',data:{labels:weeks,datasets:[
+    {label:'Pemasukan',data:inc,backgroundColor:'rgba(0,204,136,.7)',borderRadius:3,borderWidth:0},
+    {label:'Pengeluaran',data:exp,backgroundColor:'rgba(255,51,102,.7)',borderRadius:3,borderWidth:0}
+  ]},options:{responsive:true,plugins:{legend:{display:true,labels:{color:'#4a5a88',font:{size:11},boxWidth:12}}},scales:{y:{ticks:{callback:v=>'Rp'+(v>=1000000?(v/1000000).toFixed(1)+'jt':v>=1000?(v/1000).toFixed(0)+'rb':'0'),color:'#4a5a88',font:{size:10}},grid:{color:'rgba(0,204,136,.06)'}},x:{ticks:{color:'#4a5a88',font:{size:10}},grid:{display:false}}}}});
+}
+
+function renderStatsHighlights(cur,y,m){
+  const el=document.getElementById('stats-highlights');if(!el)return;
+  const rows=[];
+
+  // Best habit day
+  let bestHabitVal=null,bestHabitDate=null;
+  cur.habitData.forEach((v,i)=>{if(v!==null&&(bestHabitVal===null||v>bestHabitVal)){bestHabitVal=v;bestHabitDate=cur.dates[i];}});
+  if(bestHabitDate) rows.push({emoji:'🏆',title:'Hari Habit Terbaik',val:bestHabitVal+'%',date:bestHabitDate});
+
+  // Worst habit day
+  let worstHabitVal=null,worstHabitDate=null;
+  cur.habitData.forEach((v,i)=>{if(v!==null&&(worstHabitVal===null||v<worstHabitVal)){worstHabitVal=v;worstHabitDate=cur.dates[i];}});
+  if(worstHabitDate&&worstHabitDate!==bestHabitDate) rows.push({emoji:'📉',title:'Hari Habit Terburuk',val:worstHabitVal+'%',date:worstHabitDate});
+
+  // Best mood day
+  let bestMoodVal=null,bestMoodDate=null;
+  cur.moodData.forEach((v,i)=>{if(v!==null&&(bestMoodVal===null||v>bestMoodVal)){bestMoodVal=v;bestMoodDate=cur.dates[i];}});
+  if(bestMoodDate) rows.push({emoji:'😄',title:'Hari Mood Terbaik',val:MOOD_EMOJI[bestMoodVal],date:bestMoodDate});
+
+  // Best sleep day
+  let bestSleepVal=null,bestSleepDate=null;
+  cur.sleepData.forEach((v,i)=>{if(v!==null&&(bestSleepVal===null||v>bestSleepVal)){bestSleepVal=v;bestSleepDate=cur.dates[i];}});
+  if(bestSleepDate) rows.push({emoji:'😴',title:'Tidur Terlama',val:bestSleepVal+' jam',date:bestSleepDate});
+
+  // Longest habit streak
+  let maxStreak=0;
+  if(D.habits&&D.habits.length>0){
+    D.habits.forEach((_,i)=>{const s=calcStreak(i);if(s>maxStreak)maxStreak=s;});
+    if(maxStreak>0) rows.push({emoji:'🔥',title:'Streak Habit Terpanjang',val:maxStreak+' hari',date:''});
+  }
+
+  if(!rows.length){el.innerHTML='<div class="empty-hint">Belum ada data bulan ini</div>';return;}
+  el.innerHTML=rows.map(r=>`
+    <div class="stats-hl-row">
+      <span class="stats-hl-emoji">${r.emoji}</span>
+      <div class="stats-hl-info">
+        <div class="stats-hl-title">${r.title}</div>
+        <div class="stats-hl-val">${r.val}</div>
+      </div>
+      ${r.date?`<span class="stats-hl-date">${r.date}</span>`:''}
+    </div>`).join('');
+}

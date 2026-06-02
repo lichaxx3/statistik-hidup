@@ -253,3 +253,31 @@ textarea.inp{resize:vertical;min-height:56px;line-height:1.5}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ===== STATS TAB ===== */
+.stats-month-nav{display:flex;gap:4px}
+.stats-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stats-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;position:relative;overflow:hidden}
+.stats-card::before{content:'';position:absolute;inset:0;opacity:.07;border-radius:var(--radius-lg)}
+.stats-card-blue{border-color:rgba(30,111,255,.3)}.stats-card-blue::before{background:var(--blue)}
+.stats-card-purple{border-color:rgba(153,102,255,.3)}.stats-card-purple::before{background:#9966ff}
+.stats-card-teal{border-color:rgba(0,204,204,.3)}.stats-card-teal::before{background:#00cccc}
+.stats-card-green{border-color:rgba(0,204,136,.3)}.stats-card-green::before{background:var(--green)}
+.stats-card-icon{font-size:18px;opacity:.7;z-index:1}
+.stats-card-val{font-size:22px;font-weight:700;color:var(--text);z-index:1;font-family:var(--mono)}
+.stats-card-label{font-size:11px;color:var(--text2);z-index:1}
+.stats-compare-card{margin-bottom:16px}
+.stats-compare-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.stats-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stats-cmp-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border-radius:var(--radius)}
+.stats-cmp-icon{font-size:15px;flex-shrink:0}
+.stats-cmp-label{font-size:11px;color:var(--text2);flex:1}
+.stats-cmp-val{font-size:12px;font-weight:600;font-family:var(--mono)}
+.stats-cmp-up{color:#00cc88}.stats-cmp-down{color:#ff3366}.stats-cmp-same{color:var(--text2)}
+.stats-highlight-grid{display:flex;flex-direction:column;gap:10px}
+.stats-hl-row{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border-radius:var(--radius)}
+.stats-hl-emoji{font-size:20px;flex-shrink:0}
+.stats-hl-info{flex:1}
+.stats-hl-title{font-size:12px;color:var(--text2)}
+.stats-hl-val{font-size:14px;font-weight:600;color:var(--text)}
+.stats-hl-date{font-size:11px;color:var(--text2);margin-left:auto;font-family:var(--mono)}
