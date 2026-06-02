@@ -1,5 +1,5 @@
 /* sw.js — Service Worker for Statistik Hidup PWA */
-const CACHE_NAME = 'statistik-hidup-v1';
+const CACHE_NAME = 'statistik-hidup-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

@@ -36,7 +36,7 @@ function startApp(user){
 /* ===== HEADER ===== */
 function initHeader(){
   const hr=new Date().getHours();
-  const greet = hr<12 ? 'Selamat Pagi' : hr<17 ? 'Selamat Siang' : hr<20 ? 'Selamat Sore' : 'Selamat Malam';
+  const greet=hr<12?'Selamat Pagi':hr<17?'Selamat Siang':hr<20?'Selamat Sore':'Selamat Malam';
   const greeting=hr<12?'Selamat Pagi ☀️':hr<17?'Selamat Siang 🌤️':hr<20?'Selamat Sore 🌅':'Selamat Malam 🌙';
   document.getElementById('header-greeting').textContent=greeting+', '+currentUser.name.split(' ')[0]+'!';
   const now=new Date();
