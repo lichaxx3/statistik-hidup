@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Statistik Hidup</title>
+<meta name="description" content="Daily planner, habit tracker, mood & finance tracker">
+<meta name="theme-color" content="#0a0f1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Statistik Hidup">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="screen active">
+  <div class="auth-bg"></div>
+  <div class="auth-container">
+    <div class="auth-logo">
+      <div class="logo-icon">📊</div>
+      <h1>Statistik Hidup</h1>
+      <p>Track your life, own your growth</p>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuth('login')">Masuk</button>
+        <button class="auth-tab" onclick="switchAuth('register')">Daftar</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="login-form" class="auth-form active">
+        <div class="form-group">
+          <label>Email atau Username</label>
+          <div class="input-wrap">
+            <i class="ti ti-user"></i>
+            <input type="text" id="login-identifier" placeholder="email@kamu.com" autocomplete="username">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="ti ti-lock"></i>
+            <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+            <i class="ti ti-eye toggle-pw" onclick="togglePw('login-password',this)"></i>
+          </div>
+        </div>
+        <div id="login-error" class="auth-error"></div>
+        <button class="btn-auth" onclick="handleLogin()">
+          <span>Masuk</span><i class="ti ti-arrow-right"></i>
+        </button>
+        <p class="auth-hint">Belum punya akun? <a onclick="switchAuth('register')">Daftar gratis</a></p>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="register-form" class="auth-form">
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <div class="input-wrap">
+            <i class="ti ti-user"></i>
+            <input type="text" id="reg-name" placeholder="Nama kamu" autocomplete="name">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <div class="input-wrap">
+            <i class="ti ti-at"></i>
+            <input type="text" id="reg-username" placeholder="username_kamu" autocomplete="username">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <div class="input-wrap">
+            <i class="ti ti-mail"></i>
+            <input type="email" id="reg-email" placeholder="email@kamu.com" autocomplete="email">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="ti ti-lock"></i>
+            <input type="password" id="reg-password" placeholder="Min. 6 karakter" autocomplete="new-password">
+            <i class="ti ti-eye toggle-pw" onclick="togglePw('reg-password',this)"></i>
+          </div>
+        </div>
+        <div id="reg-error" class="auth-error"></div>
+        <button class="btn-auth" onclick="handleRegister()">
+          <span>Buat Akun</span><i class="ti ti-arrow-right"></i>
+        </button>
+        <p class="auth-hint">Sudah punya akun? <a onclick="switchAuth('login')">Masuk</a></p>
+      </div>
+    </div>
+    <p class="auth-footer">Data tersimpan lokal di perangkat ini 🔒</p>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="app-screen" class="screen">
+  <div class="app-header">
+    <div class="header-left">
+      <div class="user-avatar" id="header-avatar">U</div>
+      <div>
+        <div class="header-greeting" id="header-greeting">Halo!</div>
+        <div class="header-date" id="header-date"></div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn" onclick="showTab('settings')" aria-label="Settings"><i class="ti ti-settings"></i></button>
+      <button class="icon-btn" onclick="handleLogout()" aria-label="Logout"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn active" onclick="showTab('daily')" data-tab="daily">
+      <i class="ti ti-calendar"></i><span>Daily</span>
+    </button>
+    <button class="tab-btn" onclick="showTab('mood')" data-tab="mood">
+      <i class="ti ti-mood-happy"></i><span>Mood</span>
+    </button>
+    <button class="tab-btn" onclick="showTab('health')" data-tab="health">
+      <i class="ti ti-heartbeat"></i><span>Health</span>
+    </button>
+    <button class="tab-btn" onclick="showTab('finance')" data-tab="finance">
+      <i class="ti ti-wallet"></i><span>Finance</span>
+    </button>
+    <button class="tab-btn" onclick="showTab('settings')" data-tab="settings">
+      <i class="ti ti-settings"></i><span>Settings</span>
+    </button>
+  </div>
+
+  <div class="app-content" id="appContent">
+    <!-- DAILY TAB -->
+    <div id="tab-daily" class="tab-content active">
+      <div class="section-title">
+        <span>Prioritas Hari Ini</span>
+        <span class="section-badge" id="pri-count">0/0</span>
+      </div>
+      <div class="card" id="priorities-card">
+        <div id="priorities-list"></div>
+        <div class="add-row">
+          <input type="text" class="inp" id="pri-inp" placeholder="Tambah prioritas...">
+          <button class="btn-icon-add" onclick="addPriority()"><i class="ti ti-plus"></i></button>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <span>Habit Tracker</span>
+        <span class="section-badge" id="habit-count">0%</span>
+      </div>
+      <div class="card">
+        <div id="habits-list"></div>
+      </div>
+
+      <div class="section-title"><span>Meals</span></div>
+      <div class="card" id="meals-card"></div>
+
+      <div class="section-title"><span>Reflection</span></div>
+      <div class="card">
+        <div class="refl-item">
+          <label class="refl-label">Gimana mood kamu hari ini?</label>
+          <textarea class="inp" id="refl-mood" rows="2" placeholder="Cerita di sini..."></textarea>
+        </div>
+        <div class="refl-item">
+          <label class="refl-label">Apa yang paling berkesan hari ini?</label>
+          <textarea class="inp" id="refl-best" rows="2" placeholder="Momen terbaik hari ini..."></textarea>
+        </div>
+        <div class="refl-item">
+          <label class="refl-label">Skor hari ini: <span id="score-val" class="score-display">7</span>/10</label>
+          <input type="range" min="1" max="10" value="7" id="day-score" class="slider" oninput="document.getElementById('score-val').textContent=this.value">
+        </div>
+        <button class="btn-primary full-w mt-8" onclick="saveReflection()">
+          <i class="ti ti-device-floppy"></i> Simpan Reflection
+        </button>
+      </div>
+    </div>
+
+    <!-- MOOD TAB -->
+    <div id="tab-mood" class="tab-content">
+      <div class="section-title"><span>Mood Hari Ini</span></div>
+      <div class="card">
+        <div class="mood-grid" id="mood-btns">
+          <div class="mood-btn" onclick="setMood(0)" data-label="Sedih">😔<span>Sedih</span></div>
+          <div class="mood-btn" onclick="setMood(1)" data-label="Biasa">😐<span>Biasa</span></div>
+          <div class="mood-btn" onclick="setMood(2)" data-label="Oke">🙂<span>Oke</span></div>
+          <div class="mood-btn" onclick="setMood(3)" data-label="Senang">😊<span>Senang</span></div>
+          <div class="mood-btn" onclick="setMood(4)" data-label="Luar biasa">🤩<span>Mantap</span></div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>Trend Emosi (7 hari)</span></div>
+      <div class="card chart-card">
+        <canvas id="moodChart" role="img" aria-label="Mood trend 7 hari terakhir"></canvas>
+      </div>
+
+      <div class="section-title"><span>Sleep Tracker</span></div>
+      <div class="card">
+        <div class="two-col">
+          <div class="form-group">
+            <label>Jam Tidur</label>
+            <div class="input-wrap"><i class="ti ti-moon"></i><input type="time" id="sleep-start" value="23:00" oninput="calcSleep()"></div>
+          </div>
+          <div class="form-group">
+            <label>Jam Bangun</label>
+            <div class="input-wrap"><i class="ti ti-sun"></i><input type="time" id="sleep-end" value="06:30" oninput="calcSleep()"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Kualitas Tidur</label>
+          <div class="star-row" id="sleep-stars">
+            <span class="star on" onclick="setSleepQ(1)">★</span>
+            <span class="star on" onclick="setSleepQ(2)">★</span>
+            <span class="star on" onclick="setSleepQ(3)">★</span>
+            <span class="star" onclick="setSleepQ(4)">★</span>
+            <span class="star" onclick="setSleepQ(5)">★</span>
+          </div>
+        </div>
+        <div id="sleep-calc" class="sleep-result"></div>
+        <button class="btn-primary full-w" onclick="saveSleep()"><i class="ti ti-device-floppy"></i> Simpan Sleep</button>
+      </div>
+
+      <div class="section-title"><span>Durasi Tidur (7 hari)</span></div>
+      <div class="card chart-card">
+        <canvas id="sleepChart" role="img" aria-label="Sleep duration 7 hari terakhir"></canvas>
+      </div>
+    </div>
+
+    <!-- HEALTH TAB -->
+    <div id="tab-health" class="tab-content">
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-val" id="curr-weight">—</div>
+          <div class="metric-lbl">Berat (kg)</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="bmi-val">—</div>
+          <div class="metric-lbl">BMI</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="weight-change">—</div>
+          <div class="metric-lbl">Perubahan</div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>Log Berat Badan</span></div>
+      <div class="card">
+        <div class="two-col">
+          <div class="form-group">
+            <label>Tinggi (cm)</label>
+            <div class="input-wrap"><i class="ti ti-ruler"></i><input type="number" id="height-inp" placeholder="165" value="165"></div>
+          </div>
+          <div class="form-group">
+            <label>Berat (kg)</label>
+            <div class="input-wrap"><i class="ti ti-scale"></i><input type="number" id="weight-inp" placeholder="60"></div>
+          </div>
+        </div>
+        <button class="btn-primary full-w" onclick="addWeight()"><i class="ti ti-plus"></i> Log Berat</button>
+        <div class="bmi-bar-wrap mt-8">
+          <div class="bmi-bar">
+            <div class="bmi-seg" style="background:#4488ff;flex:10"></div>
+            <div class="bmi-seg" style="background:#00cc88;flex:30"></div>
+            <div class="bmi-seg" style="background:#ffbb00;flex:20"></div>
+            <div class="bmi-seg" style="background:#ff6600;flex:20"></div>
+            <div class="bmi-seg" style="background:#ff2244;flex:20"></div>
+          </div>
+          <div id="bmi-pointer-wrap" class="bmi-pointer-wrap"></div>
+          <div class="bmi-labels">
+            <span>Kurus</span><span>Normal</span><span>Overweight</span><span>Obese</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>Trend Berat</span></div>
+      <div class="card chart-card">
+        <canvas id="weightChart" role="img" aria-label="Weight trend chart"></canvas>
+      </div>
+
+      <div class="section-title"><span>Fitness Log</span></div>
+      <div class="card">
+        <div id="fitness-log"></div>
+        <div class="add-row mt-8">
+          <input type="text" class="inp" id="fitness-inp" placeholder="Aktivitas (contoh: Lari 5km, Push-up 50x)...">
+          <button class="btn-icon-add" onclick="addFitness()"><i class="ti ti-plus"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCE TAB -->
+    <div id="tab-finance" class="tab-content">
+      <div class="metrics-row">
+        <div class="metric-card green">
+          <div class="metric-val" id="total-income">Rp0</div>
+          <div class="metric-lbl">Pemasukan</div>
+        </div>
+        <div class="metric-card red">
+          <div class="metric-val" id="total-expense">Rp0</div>
+          <div class="metric-lbl">Pengeluaran</div>
+        </div>
+        <div class="metric-card" id="balance-card">
+          <div class="metric-val" id="net-balance">Rp0</div>
+          <div class="metric-lbl">Saldo</div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>Target Tabungan</span></div>
+      <div class="card">
+        <div class="two-col">
+          <div class="form-group">
+            <label>Target (Rp)</label>
+            <div class="input-wrap"><i class="ti ti-target"></i><input type="number" id="saving-target" placeholder="0" oninput="updateSavings()"></div>
+          </div>
+          <div class="form-group">
+            <label>Terkumpul (Rp)</label>
+            <div class="input-wrap"><i class="ti ti-piggy-bank"></i><input type="number" id="saving-current" placeholder="0" oninput="updateSavings()"></div>
+          </div>
+        </div>
+        <div class="saving-info">
+          <span id="saving-pct" class="saving-pct">0%</span>
+          <span id="saving-left" class="saving-left">Sisa: Rp0</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="saving-bar" style="width:0%"></div></div>
+      </div>
+
+      <div class="section-title"><span>Tambah Transaksi</span></div>
+      <div class="card">
+        <div class="tx-type-row">
+          <button class="tx-type-btn active" id="btn-income" onclick="setTxType('income')">
+            <i class="ti ti-trending-up"></i> Pemasukan
+          </button>
+          <button class="tx-type-btn" id="btn-expense" onclick="setTxType('expense')">
+            <i class="ti ti-trending-down"></i> Pengeluaran
+          </button>
+        </div>
+        <div class="two-col mt-8">
+          <div class="form-group">
+            <label>Kategori</label>
+            <select class="inp" id="tx-cat">
+              <option>Makanan</option><option>Transport</option><option>Tagihan</option>
+              <option>Hiburan</option><option>Belanja</option><option>Kesehatan</option>
+              <option>Tabungan</option><option>Gaji</option><option>Freelance</option><option>Lainnya</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Jumlah (Rp)</label>
+            <div class="input-wrap"><i class="ti ti-currency"></i><input type="number" id="tx-amount" placeholder="0"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Deskripsi</label>
+          <div class="input-wrap"><i class="ti ti-note"></i><input type="text" id="tx-desc" placeholder="Opsional..."></div>
+        </div>
+        <button class="btn-primary full-w" onclick="addTransaction()"><i class="ti ti-plus"></i> Tambah Transaksi</button>
+      </div>
+
+      <div class="section-title"><span>Pengeluaran per Kategori</span></div>
+      <div class="card">
+        <div class="pie-layout">
+          <div class="pie-canvas-wrap"><canvas id="pieChart" role="img" aria-label="Pie chart pengeluaran"></canvas></div>
+          <div class="pie-legend" id="pie-legend"><div class="empty-hint">Belum ada data</div></div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>Budget Planner</span></div>
+      <div class="card">
+        <div id="budget-list"><div class="empty-hint">Belum ada budget</div></div>
+        <div class="add-row mt-8">
+          <select class="inp" id="budget-cat-sel" style="flex:1.2">
+            <option>Makanan</option><option>Transport</option><option>Tagihan</option>
+            <option>Hiburan</option><option>Belanja</option><option>Kesehatan</option>
+          </select>
+          <input type="number" class="inp" id="budget-limit" placeholder="Limit Rp" style="flex:1">
+          <button class="btn-icon-add" onclick="setBudget()"><i class="ti ti-check"></i></button>
+        </div>
+      </div>
+
+      <div class="section-title"><span>Tagihan / Cicilan</span></div>
+      <div class="card">
+        <div id="bills-list"><div class="empty-hint">Belum ada tagihan</div></div>
+        <div class="add-row-4 mt-8">
+          <input type="text" class="inp" id="bill-name" placeholder="Nama tagihan" style="flex:2">
+          <input type="number" class="inp" id="bill-date" placeholder="Tgl" min="1" max="31" style="flex:.6">
+          <input type="number" class="inp" id="bill-amount" placeholder="Rp" style="flex:1.2">
+          <button class="btn-icon-add" onclick="addBill()"><i class="ti ti-plus"></i></button>
+        </div>
+      </div>
+
+      <div class="section-title"><span>Riwayat Transaksi</span></div>
+      <div class="card">
+        <div id="tx-history"><div class="empty-hint">Belum ada transaksi</div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div id="tab-settings" class="tab-content">
+      <div class="profile-card" id="profile-card"></div>
+
+      <div class="section-title"><span>Edit Habits</span></div>
+      <div class="card">
+        <div id="habit-editor"></div>
+        <div class="add-row mt-8">
+          <input type="text" class="inp" id="new-habit-inp" placeholder="Nama habit baru...">
+          <button class="btn-icon-add" onclick="addHabit()"><i class="ti ti-plus"></i></button>
+        </div>
+      </div>
+
+      <div class="section-title"><span>Notifikasi & Reminder</span></div>
+      <div class="card" id="notif-list"></div>
+
+      <div class="section-title"><span>Export Data</span></div>
+      <div class="card">
+        <button class="btn-ghost full-w mb-8" onclick="exportCSV()"><i class="ti ti-file-spreadsheet"></i> Export Transaksi (.CSV)</button>
+        <button class="btn-ghost full-w" onclick="exportJSON()"><i class="ti ti-download"></i> Export Semua Data (.JSON)</button>
+        <p class="hint-text mt-8">Data tersimpan lokal & offline di perangkat ini.</p>
+      </div>
+
+      <div class="section-title"><span>Akun</span></div>
+      <div class="card">
+        <button class="btn-danger full-w mb-8" onclick="handleLogout()"><i class="ti ti-logout"></i> Logout</button>
+        <button class="btn-ghost full-w" onclick="if(confirm('Reset semua data kamu? Tidak bisa dikembalikan!'))resetUserData()"><i class="ti ti-trash"></i> Reset Data Saya</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then(r=>console.log('SW registered')).catch(e=>console.log('SW error',e));
+  });
+}
+</script>
+</body>
+</html>
