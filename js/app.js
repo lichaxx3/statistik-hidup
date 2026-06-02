@@ -11,7 +11,7 @@ function loadData(){
   try{return JSON.parse(localStorage.getItem(userKey('main'))||'{}')}catch{return{}}
 }
 function saveData(){localStorage.setItem(userKey('main'),JSON.stringify(D))}
-function getToday(){return new Date().toISOString().slice(0,10)}
+function getToday(){const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day;}
 
 /* ===== APP START ===== */
 function startApp(user){
@@ -118,7 +118,7 @@ function renderHabits(){
 }
 function calcStreak(idx){
   let s=0;const today=new Date();
-  for(let i=1;i<=60;i++){const d=new Date(today);d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);if(D.habitLog&&D.habitLog[k]&&D.habitLog[k][idx])s++;else break;}
+  for(let i=1;i<=60;i++){const d=new Date(today);d.setDate(d.getDate()-i);const k=(() => { const _d=d; const _y=_d.getFullYear(); const _m=String(_d.getMonth()+1).padStart(2,'0'); const _day=String(_d.getDate()).padStart(2,'0'); return _y+'-'+_m+'-'+_day; })();if(D.habitLog&&D.habitLog[k]&&D.habitLog[k][idx])s++;else break;}
   return s;
 }
 function toggleHabit(i){
@@ -186,7 +186,7 @@ function initMoodUI(){
 function renderMoodChart(){
   const MOODS=['😔','😐','🙂','😊','🤩'];
   const days=[],vals=[];
-  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);days.push(k.slice(5));vals.push(D.moods&&D.moods[k]!==undefined?D.moods[k]:null);}
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=(() => { const _d=d; const _y=_d.getFullYear(); const _m=String(_d.getMonth()+1).padStart(2,'0'); const _day=String(_d.getDate()).padStart(2,'0'); return _y+'-'+_m+'-'+_day; })();days.push(k.slice(5));vals.push(D.moods&&D.moods[k]!==undefined?D.moods[k]:null);}
   const ctx=document.getElementById('moodChart');if(!ctx)return;
   if(moodChart)moodChart.destroy();
   moodChart=new Chart(ctx,{type:'line',data:{labels:days,datasets:[{data:vals,borderColor:'#1e6fff',backgroundColor:'rgba(30,111,255,.12)',tension:.4,pointRadius:5,pointBackgroundColor:'#1e6fff',pointBorderColor:'#0a0f1e',pointBorderWidth:2,spanGaps:true,fill:true}]},options:{responsive:false,plugins:{legend:{display:false}},scales:{y:{min:-0.5,max:4.5,ticks:{stepSize:1,callback:v=>MOODS[v]||'',color:'#4a5a88',font:{size:14}},grid:{color:'rgba(30,111,255,.08)'}},x:{ticks:{color:'#4a5a88',font:{size:11}},grid:{color:'rgba(30,111,255,.08)'}}}}});
@@ -223,7 +223,7 @@ function saveSleep(){
 }
 function renderSleepChart(){
   const days=[],hrs=[];
-  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);days.push(k.slice(5));const s=D.sleep&&D.sleep[k];hrs.push(s?s.hours:null);}
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=(() => { const _d=d; const _y=_d.getFullYear(); const _m=String(_d.getMonth()+1).padStart(2,'0'); const _day=String(_d.getDate()).padStart(2,'0'); return _y+'-'+_m+'-'+_day; })();days.push(k.slice(5));const s=D.sleep&&D.sleep[k];hrs.push(s?s.hours:null);}
   const ctx=document.getElementById('sleepChart');if(!ctx)return;
   if(sleepChart)sleepChart.destroy();
   sleepChart=new Chart(ctx,{type:'bar',data:{labels:days,datasets:[{data:hrs,backgroundColor:'rgba(30,111,255,.5)',borderColor:'#1e6fff',borderWidth:1,borderRadius:4}]},options:{responsive:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:12,ticks:{color:'#4a5a88',font:{size:11}},grid:{color:'rgba(30,111,255,.08)'}},x:{ticks:{color:'#4a5a88',font:{size:11}},grid:{display:false}}}}});
